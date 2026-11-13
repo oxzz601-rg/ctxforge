@@ -6,7 +6,7 @@ from ctxforge.core import build_bundle, collect, estimate_tokens, rank
 
 
 @pytest.fixture()
- def repo(tmp_path):
+def repo(tmp_path):
     (tmp_path / "src").mkdir()
     (tmp_path / "tests").mkdir()
     (tmp_path / "assets").mkdir()
@@ -37,7 +37,7 @@ def test_query_ranking_puts_the_relevant_file_first(repo):
 
 def test_imports_are_pulled_in(repo):
     files, _ = collect(repo)
-    ranked = dict((item.path, item) for item in rank(files, "retry billing"))
+    ranked = {item.path: item for item in rank(files, "retry billing")}
     assert ranked["src/db.py"].score > 0
 
 
@@ -48,8 +48,7 @@ def test_budget_is_respected(repo):
 
 
 def test_large_files_are_truncated(repo):
-    big = repo / "src" / "big.py"
-    big.write_text("\n".join("value_{} = {}".format(i, i) for i in range(400)))
+    (repo / "src" / "big.py").write_text("\n".join("value_{} = {}".format(i, i) for i in range(400)))
     bundle = build_bundle(repo, query="big value", budget=400, max_file_tokens=40)
     truncated = [item for item in bundle.files if item.truncated]
     assert truncated, "expected at least one truncated file"
